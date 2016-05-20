@@ -92,7 +92,7 @@ var Touchable = Draggable.extend({
             containerEl: options.el
         });
         options.el = null;
-        the.Super(options);
+        Touchable.parent(the, options);
         the[_meta] = {};
 
         the.on('dragStart', function (meta) {
@@ -147,7 +147,7 @@ var Touchable = Draggable.extend({
      * 销毁实例
      */
     destroy: function () {
-        this.Super.destroy();
+        Touchable.parent.destroy(this);
     }
 });
 
