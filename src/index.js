@@ -2,6 +2,7 @@
  * classes touchable
  * @author zcl
  * @create 2016-04-26 14:53
+ * @ref https://github.com/AlloyTeam/AlloyFinger/blob/master/alloy_finger.js
  */
 
 'use strict';
