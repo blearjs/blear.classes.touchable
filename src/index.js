@@ -148,7 +148,7 @@ var Touchable = Draggable.extend({
      * 销毁实例
      */
     destroy: function () {
-        Touchable.parent.destroy(this);
+        Touchable.invoke('destroy', this);
     }
 });
 
