@@ -1,7 +1,8 @@
 /**
  * classes touchable
- * @author zcl
- * @create 2016-04-26 14:53
+ * @author zcl 云淡然
+ * @created 2016-04-26 14:53
+ * @updated 2016-12-16 16:06:56
  * @ref https://github.com/AlloyTeam/AlloyFinger/blob/master/alloy_finger.js
  */
 
@@ -18,10 +19,16 @@ var defaults = {
     el: null,
 
     /**
+     * tap 事件移动距离
+     * @type Number
+     */
+    tapMaxDistance: 10,
+
+    /**
      * 点击事件时间间隔
      * @type Number
      */
-    tapIntervalTime: 100,
+    tapIntervalTime: 250,
 
     /**
      * 滑动事件移动距离
@@ -122,7 +129,14 @@ var Touchable = Draggable.extend({
                 y: the[_meta].endY
             };
 
-            if (positionStart.x === positionEnd.x && positionStart.y === positionEnd.y &&
+            // alert(
+            //     'dx = ' + (positionStart.x - positionEnd.x) +
+            //     ', dy =' + (positionStart.y - positionEnd.y) +
+            //     ', dt =' + (the[_meta].endTime - the[_meta].startTime)
+            // );
+
+            if (Math.abs(positionStart.x - positionEnd.x) < options.tapMaxDistance &&
+                Math.abs(positionStart.y - positionEnd.y) < options.tapMaxDistance &&
                 the[_meta].endTime - the[_meta].startTime < options.tapIntervalTime) {
                 the.emit('tap', meta);
             }
