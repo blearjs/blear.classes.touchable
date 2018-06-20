@@ -43,48 +43,6 @@ var defaults = {
     preventDefault: true
 };
 
-
-/**
- * 获取两次事件的距离
- * @param {Object} pos1 坐标
- * @param {Object} pos2 坐标
- * @returns {Number}
- */
-var getDistance = function (pos1, pos2) {
-    var x = pos2.x - pos1.x,
-        y = pos2.y - pos1.y;
-    return Math.sqrt((x * x) + (y * y));
-};
-
-/**
- * 获取两次事件的角度
- * @param {Object} p1 坐标
- * @param {Object} p2 坐标
- * @returns {Number}
- */
-var getAngle = function (p1, p2) {
-    return Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
-};
-
-/**
- * 获取两次事件的方向
- * @param {Number} agl 角度
- * @returns {String|Null}
- */
-var getDirectionFromAngle = function (agl) {
-    var directions = {
-        Up: agl < -45 && agl > -135,
-        Down: agl >= 45 && agl < 135,
-        Left: agl >= 135 || agl <= -135,
-        Right: agl >= -45 && agl <= 45
-    };
-    for (var key in directions) {
-        if (directions[key]) return key;
-    }
-    return null;
-};
-
-
 /**
  * @class Touchable
  * @extend Draggable
@@ -179,3 +137,46 @@ var _endTime = sole();
 
 Touchable.defaults = defaults;
 module.exports = Touchable;
+
+// ======================================================
+
+
+/**
+ * 获取两次事件的距离
+ * @param {Object} pos1 坐标
+ * @param {Object} pos2 坐标
+ * @returns {Number}
+ */
+function getDistance(pos1, pos2) {
+    var x = pos2.x - pos1.x,
+        y = pos2.y - pos1.y;
+    return Math.sqrt((x * x) + (y * y));
+}
+
+/**
+ * 获取两次事件的角度
+ * @param {Object} p1 坐标
+ * @param {Object} p2 坐标
+ * @returns {Number}
+ */
+function getAngle(p1, p2) {
+    return Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
+}
+
+/**
+ * 获取两次事件的方向
+ * @param {Number} agl 角度
+ * @returns {String|Null}
+ */
+function getDirectionFromAngle(agl) {
+    var directions = {
+        Up: agl < -45 && agl > -135,
+        Down: agl >= 45 && agl < 135,
+        Left: agl >= 135 || agl <= -135,
+        Right: agl >= -45 && agl <= 45
+    };
+    for (var key in directions) {
+        if (directions[key]) return key;
+    }
+    return null;
+}
