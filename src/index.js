@@ -61,52 +61,72 @@ var Touchable = Draggable.extend({
         Touchable.parent(the, options);
 
         the.on('dragStart', function (meta) {
-            var touches = meta.originalEvent.touches || [];
-            var touch1 = touches[1];
-
+            var touch1 = meta.touch1;
             the[_startX] = meta.startX;
             the[_startY] = meta.startY;
             the[_startTime] = meta.startTime;
             the[_start1X] = meta.start1X = touch1 ? touch1.clientX : null;
             the[_start1Y] = meta.start1Y = touch1 ? touch1.clientY : null;
-            meta.length = touches.length;
             the.emit('touchStart', meta);
         });
 
         the.on('dragMove', function (meta) {
-            var touches = meta.originalEvent.touches || [];
-            var length = meta.length = touches.length;
-            var touch1 = touches[1];
+            var touch0 = meta.touch0;
+            var touch1 = meta.touch1;
+            var scale = 1;
+            var rotation = 0;
 
             if (the[_start1X] === null && touch1) {
                 the[_start1X] = meta.start1X = touch1.clientX;
                 the[_start1Y] = meta.start1Y = touch1.clientY;
             }
 
+            if (touch1) {
+                var p0Start = {
+                    x: the[_startX],
+                    y: the[_startY]
+                };
+                var p0End = {
+                    x: touch0.clientX,
+                    y: touch0.clientY
+                };
+                var p1Start = {
+                    x: the[_start1X],
+                    y: the[_start1Y]
+                };
+                var p1End = {
+                    x: the[_end1X] = touch1.clientX,
+                    y: the[_end1Y] = touch1.clientY
+                };
+                var dStart = getDistance(p0Start, p1Start);
+                var dEnd = getDistance(p0End, p1End);
+                var aStart = getAngle(p0Start, p1Start);
+                var aEnd = getAngle(p0End, p1End);
+                scale = getZoom(dStart, dEnd);
+                rotation = aEnd - aStart;
+            }
+
+            meta.scale = scale;
+            meta.rotation = rotation;
+
+            if (touch1) {
+                the.emit('pinch', meta);
+            }
+
             the.emit('touchMove', meta);
         });
 
         the.on('dragEnd', function (meta) {
-            var oe = meta.originalEvent;
-            var touches = oe.changedTouches || [];
-            var touch1 = touches[1] || touches[0];
-            var zoom = 1;
-            var rotate = 0;
+            var scale = 1;
+            var rotation = 0;
             var multiTouch = the[_start1X] !== null;
-
-            the[_endX] = meta.endX;
-            the[_endY] = meta.endY;
-            the[_endTime] = meta.endTime;
-            the[_end1X] = meta.end1X = touch1 ? touch1.clientX : the[_endX];
-            the[_end1Y] = meta.end1Y = touch1 ? touch1.clientY : the[_endY];
-
             var p0Start = {
                 x: the[_startX],
                 y: the[_startY]
             };
             var p0End = {
-                x: the[_endX],
-                y: the[_endY]
+                x: meta.endX,
+                y: meta.endY
             };
             var p1Start = {
                 x: the[_start1X],
@@ -118,7 +138,7 @@ var Touchable = Draggable.extend({
             };
             var d0 = getDistance(p0Start, p0End);
             var a0 = getAngle(p0Start, p0End);
-            var deltaTime = the[_endTime] - the[_startTime];
+            var deltaTime = meta.endTime - the[_startTime];
             var direction = getDirectionFromAngle(a0);
 
             if (multiTouch) {
@@ -126,23 +146,17 @@ var Touchable = Draggable.extend({
                 var dEnd = getDistance(p0End, p1End);
                 var aStart = getAngle(p0Start, p1Start);
                 var aEnd = getAngle(p0End, p1End);
-                zoom = getZoom(dStart, dEnd);
-                rotate = aEnd - aStart;
+                scale = getZoom(dStart, dEnd);
+                rotation = aEnd - aStart;
             }
 
-            meta.length = touches.length;
             meta.start1X = the[_start1X];
             meta.start1Y = the[_start1Y];
             meta.delta1X = the[_end1X] - the[_start1X];
             meta.delta1Y = the[_end1Y] - the[_start1Y];
             meta.direction = direction.toLowerCase();
-            meta.angle = a0;
-            meta.distanceStart = dStart;
-            meta.distanceEnd = dEnd;
-            meta.angleStart = aStart;
-            meta.angleEnd = aEnd;
-            meta.rotate = rotate;
-            meta.zoom = zoom;
+            meta.rotation = rotation;
+            meta.scale = scale;
 
             if (d0 < options.tapMaxDistance && deltaTime < options.tapIntervalTime) {
                 the.emit('tap', meta);
@@ -153,12 +167,11 @@ var Touchable = Draggable.extend({
                 the.emit('swipe' + direction, meta);
             }
 
-            the.emit('touchEnd', meta);
-
             if (multiTouch) {
-                the.emit('zoom', meta);
-                the.emit('rotate', meta);
+                the.emit('pinchEnd', meta);
             }
+
+            the.emit('touchEnd', meta);
         });
     },
 
@@ -173,14 +186,11 @@ var Touchable = Draggable.extend({
 var sole = Touchable.sole;
 var _startX = sole();
 var _startY = sole();
-var _endX = sole();
-var _endY = sole();
 var _start1X = sole();
 var _start1Y = sole();
 var _end1X = sole();
 var _end1Y = sole();
 var _startTime = sole();
-var _endTime = sole();
 
 Touchable.defaults = defaults;
 module.exports = Touchable;

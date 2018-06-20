@@ -11,17 +11,27 @@
 var Touchable = require('../src/index');
 
 var consoleEl = document.getElementById('console');
+var demoEl = document.getElementById('demo');
 
 var tch = new Touchable({
     el: '#demo'
 });
 
-
-tch.on('touchEnd', function (ev) {
-    console(ev);
+var startAngle = 0;
+var startScale = 1;
+tch.on('pinch', function (meta) {
+    var currentRotate = startAngle - meta.rotation;
+    var currentScale = startScale * meta.scale;
+    // demoEl.innerHTML = current + ' deg';
+    demoEl.style.transform = 'rotate(' + (currentRotate) + 'deg) scale(' + (currentScale) + ')';
+    console.log(meta);
+});
+tch.on('pinchEnd', function (meta) {
+    startAngle -= meta.rotation;
+    startScale *= meta.scale;
 });
 
 // ==================================
-function console(ev) {
+function print(ev) {
     consoleEl.innerHTML = '<p>' + JSON.stringify(ev, null, 2) + '</p>';
 }
