@@ -8,7 +8,7 @@
 
 'use strict';
 
-var object =    require('blear.utils.object');
+var object = require('blear.utils.object');
 var Draggable = require('blear.classes.draggable');
 
 var defaults = {
@@ -101,12 +101,16 @@ var Touchable = Draggable.extend({
         });
         options.el = null;
         Touchable.parent(the, options);
-        the[_meta] = {};
 
         the.on('dragStart', function (meta) {
-            the[_meta].startX = meta.startX;
-            the[_meta].startY = meta.startY;
-            the[_meta].startTime = meta.startTime;
+            var oe = meta.originalEvent;
+            var touches = oe.touches;
+
+            the[_startX] = meta.startX;
+            the[_startY] = meta.startY;
+            the[_startTime] = meta.startTime;
+            the[_start1X] = meta.start1X = (touches[1] || touches[0]).clientX;
+            the[_start1Y] = meta.start1Y = (touches[1] || touches[0]).clientY;
             the.emit('touchStart', meta);
         });
 
@@ -115,29 +119,28 @@ var Touchable = Draggable.extend({
         });
 
         the.on('dragEnd', function (meta) {
-            the[_meta].endX = meta.endX;
-            the[_meta].endY = meta.endY;
-            the[_meta].endTime = meta.endTime;
+            var oe = meta.originalEvent;
+            var touches = oe.touches;
+            var touch1 = touches[1] || touches[0];
+
+            the[_endX] = meta.endX;
+            the[_endY] = meta.endY;
+            the[_endTime] = meta.endTime;
+            the[_end1X] = meta.end1X = touch1 ? touch1.clientX : the[_endX];
+            the[_end1Y] = meta.end1Y = touch1 ? touch1.clientY : the[_endY];
 
             var positionStart = {
-                x: the[_meta].startX,
-                y: the[_meta].startY
+                x: the[_startX],
+                y: the[_startY]
             };
-
             var positionEnd = {
-                x: the[_meta].endX,
-                y: the[_meta].endY
+                x: the[_endX],
+                y: the[_endY]
             };
-
-            // alert(
-            //     'dx = ' + (positionStart.x - positionEnd.x) +
-            //     ', dy =' + (positionStart.y - positionEnd.y) +
-            //     ', dt =' + (the[_meta].endTime - the[_meta].startTime)
-            // );
 
             if (Math.abs(positionStart.x - positionEnd.x) < options.tapMaxDistance &&
                 Math.abs(positionStart.y - positionEnd.y) < options.tapMaxDistance &&
-                the[_meta].endTime - the[_meta].startTime < options.tapIntervalTime) {
+                the[_endTime] - the[_startTime] < options.tapIntervalTime) {
                 the.emit('tap', meta);
             }
 
@@ -148,10 +151,6 @@ var Touchable = Draggable.extend({
             if (distance > options.swipeMinDistance) {
                 the.emit('swipe', meta);
                 the.emit('swipe' + direction, meta);
-            }
-
-            for (var i in the[_meta]) {
-                the[_meta][i] = null;
             }
 
             the.emit('touchEnd', meta);
@@ -166,7 +165,17 @@ var Touchable = Draggable.extend({
     }
 });
 
-var _meta = Touchable.sole();
+var sole = Touchable.sole;
+var _startX = sole();
+var _startY = sole();
+var _endX = sole();
+var _endY = sole();
+var _start1X = sole();
+var _start1Y = sole();
+var _end1X = sole();
+var _end1Y = sole();
+var _startTime = sole();
+var _endTime = sole();
 
 Touchable.defaults = defaults;
 module.exports = Touchable;

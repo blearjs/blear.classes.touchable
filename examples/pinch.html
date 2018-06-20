@@ -19,8 +19,43 @@
     <meta name="description" content="描述语句">
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
     <title>pinch.html</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-sizing: border-box;
+        }
+
+        #demo {
+            height: 400px;
+            background: #e998c5;
+            border: 2px solid #c17ea3;
+            margin: 10px;
+            font-size: 20px;
+            line-height: 400px;
+            text-align: center;
+            color: #fff;
+        }
+
+        #console {
+            background: #000;
+            color: #fff;
+            font-family: Ayuthaya;
+            padding: 10px;
+            margin: 10px;
+            /*overflow-x: auto;*/
+            /*-webkit-overflow-scrolling: touch;*/
+        }
+    </style>
 </head>
 <body ontouchstart="">
+
+
+<div id="demo">pinch me</div>
+<pre id="console"></pre>
 
 <script src="/node_modules/coolie.js/coolie.js"
 data-config="/examples/coolie-config.js"

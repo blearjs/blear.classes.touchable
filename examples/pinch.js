@@ -8,6 +8,20 @@
 
 'use strict';
 
+var Touchable = require('../src/index');
+
+var consoleEl = document.getElementById('console');
+
+var tch = new Touchable({
+    el: '#demo'
+});
 
 
+tch.on('touchStart', function (ev) {
+    console(ev);
+});
 
+// ==================================
+function console(ev) {
+    consoleEl.innerHTML = '<p>' + JSON.stringify(ev, null, 2) + '</p>';
+}
