@@ -90,17 +90,15 @@ var Touchable = Draggable.extend({
             var oe = meta.originalEvent;
             var touches = oe.changedTouches || [];
             var touch1 = touches[1] || touches[0];
+            var zoom = 1;
+            var rotate = 0;
+            var multiTouch = the[_start1X] !== null;
 
             the[_endX] = meta.endX;
             the[_endY] = meta.endY;
             the[_endTime] = meta.endTime;
             the[_end1X] = meta.end1X = touch1 ? touch1.clientX : the[_endX];
             the[_end1Y] = meta.end1Y = touch1 ? touch1.clientY : the[_endY];
-
-            if (the[_start1X] === null) {
-                the[_start1X] = the[_startX];
-                the[_end1X] = the[_endX];
-            }
 
             var p0Start = {
                 x: the[_startX],
@@ -119,13 +117,18 @@ var Touchable = Draggable.extend({
                 y: the[_end1Y]
             };
             var d0 = getDistance(p0Start, p0End);
-            var dStart = getDistance(p0Start, p1Start);
-            var dEnd = getDistance(p0End, p1End);
             var a0 = getAngle(p0Start, p0End);
-            var aStart = getAngle(p0Start, p1Start);
-            var aEnd = getAngle(p0End, p1End);
             var deltaTime = the[_endTime] - the[_startTime];
             var direction = getDirectionFromAngle(a0);
+
+            if (multiTouch) {
+                var dStart = getDistance(p0Start, p1Start);
+                var dEnd = getDistance(p0End, p1End);
+                var aStart = getAngle(p0Start, p1Start);
+                var aEnd = getAngle(p0End, p1End);
+                zoom = getZoom(dStart, dEnd);
+                rotate = aEnd - aStart;
+            }
 
             meta.length = touches.length;
             meta.start1X = the[_start1X];
@@ -138,8 +141,8 @@ var Touchable = Draggable.extend({
             meta.distanceEnd = dEnd;
             meta.angleStart = aStart;
             meta.angleEnd = aEnd;
-            meta.rotate = aEnd - aStart;
-            meta.zoom = getZoom(dStart, dEnd);
+            meta.rotate = rotate;
+            meta.zoom = zoom;
 
             if (d0 < options.tapMaxDistance && deltaTime < options.tapIntervalTime) {
                 the.emit('tap', meta);
@@ -151,6 +154,11 @@ var Touchable = Draggable.extend({
             }
 
             the.emit('touchEnd', meta);
+
+            if (multiTouch) {
+                the.emit('zoom', meta);
+                the.emit('rotate', meta);
+            }
         });
     },
 
