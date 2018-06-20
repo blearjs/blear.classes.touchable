@@ -61,24 +61,34 @@ var Touchable = Draggable.extend({
         Touchable.parent(the, options);
 
         the.on('dragStart', function (meta) {
-            var oe = meta.originalEvent;
-            var touches = oe.touches;
+            var touches = meta.originalEvent.touches || [];
+            var touch1 = touches[1];
 
             the[_startX] = meta.startX;
             the[_startY] = meta.startY;
             the[_startTime] = meta.startTime;
-            the[_start1X] = meta.start1X = (touches[1] || touches[0]).clientX;
-            the[_start1Y] = meta.start1Y = (touches[1] || touches[0]).clientY;
+            the[_start1X] = meta.start1X = touch1 ? touch1.clientX : null;
+            the[_start1Y] = meta.start1Y = touch1 ? touch1.clientY : null;
+            meta.length = touches.length;
             the.emit('touchStart', meta);
         });
 
         the.on('dragMove', function (meta) {
+            var touches = meta.originalEvent.touches || [];
+            var length = meta.length = touches.length;
+            var touch1 = touches[1];
+
+            if (the[_start1X] === null && touch1) {
+                the[_start1X] = meta.start1X = touch1.clientX;
+                the[_start1Y] = meta.start1Y = touch1.clientY;
+            }
+
             the.emit('touchMove', meta);
         });
 
         the.on('dragEnd', function (meta) {
             var oe = meta.originalEvent;
-            var touches = oe.touches;
+            var touches = oe.changedTouches || [];
             var touch1 = touches[1] || touches[0];
 
             the[_endX] = meta.endX;
@@ -87,26 +97,55 @@ var Touchable = Draggable.extend({
             the[_end1X] = meta.end1X = touch1 ? touch1.clientX : the[_endX];
             the[_end1Y] = meta.end1Y = touch1 ? touch1.clientY : the[_endY];
 
-            var positionStart = {
+            if (the[_start1X] === null) {
+                the[_start1X] = the[_startX];
+                the[_end1X] = the[_endX];
+            }
+
+            var p0Start = {
                 x: the[_startX],
                 y: the[_startY]
             };
-            var positionEnd = {
+            var p0End = {
                 x: the[_endX],
                 y: the[_endY]
             };
+            var p1Start = {
+                x: the[_start1X],
+                y: the[_start1Y]
+            };
+            var p1End = {
+                x: the[_end1X],
+                y: the[_end1Y]
+            };
+            var d0 = getDistance(p0Start, p0End);
+            var dStart = getDistance(p0Start, p1Start);
+            var dEnd = getDistance(p0End, p1End);
+            var a0 = getAngle(p0Start, p0End);
+            var aStart = getAngle(p0Start, p1Start);
+            var aEnd = getAngle(p0End, p1End);
+            var deltaTime = the[_endTime] - the[_startTime];
+            var direction = getDirectionFromAngle(a0);
 
-            if (Math.abs(positionStart.x - positionEnd.x) < options.tapMaxDistance &&
-                Math.abs(positionStart.y - positionEnd.y) < options.tapMaxDistance &&
-                the[_endTime] - the[_startTime] < options.tapIntervalTime) {
+            meta.length = touches.length;
+            meta.start1X = the[_start1X];
+            meta.start1Y = the[_start1Y];
+            meta.delta1X = the[_end1X] - the[_start1X];
+            meta.delta1Y = the[_end1Y] - the[_start1Y];
+            meta.direction = direction.toLowerCase();
+            meta.angle = a0;
+            meta.distanceStart = dStart;
+            meta.distanceEnd = dEnd;
+            meta.angleStart = aStart;
+            meta.angleEnd = aEnd;
+            meta.rotate = aEnd - aStart;
+            meta.zoom = getZoom(dStart, dEnd);
+
+            if (d0 < options.tapMaxDistance && deltaTime < options.tapIntervalTime) {
                 the.emit('tap', meta);
             }
 
-            var distance = getDistance(positionStart, positionEnd);
-            var angle = getAngle(positionStart, positionEnd);
-            var direction = getDirectionFromAngle(angle);
-
-            if (distance > options.swipeMinDistance) {
+            if (d0 > options.swipeMinDistance) {
                 the.emit('swipe', meta);
                 the.emit('swipe' + direction, meta);
             }
@@ -143,24 +182,27 @@ module.exports = Touchable;
 
 /**
  * 获取两次事件的距离
- * @param {Object} pos1 坐标
- * @param {Object} pos2 坐标
+ * @param {Object} p0 坐标
+ * @param {Object} p1 坐标
  * @returns {Number}
  */
-function getDistance(pos1, pos2) {
-    var x = pos2.x - pos1.x,
-        y = pos2.y - pos1.y;
+function getDistance(p0, p1) {
+    var x = p1.x - p0.x,
+        y = p1.y - p0.y;
     return Math.sqrt((x * x) + (y * y));
 }
 
 /**
  * 获取两次事件的角度
+ * @param {Object} p0 坐标
  * @param {Object} p1 坐标
- * @param {Object} p2 坐标
  * @returns {Number}
  */
-function getAngle(p1, p2) {
-    return Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
+function getAngle(p0, p1) {
+    return Math.atan2(
+        p0.y - p1.y, /* 因为网页的纵坐标是向下的，因此这里需要反减 */
+        p1.x - p0.x
+    ) * 180 / Math.PI;
 }
 
 /**
@@ -170,8 +212,8 @@ function getAngle(p1, p2) {
  */
 function getDirectionFromAngle(agl) {
     var directions = {
-        Up: agl < -45 && agl > -135,
-        Down: agl >= 45 && agl < 135,
+        Up: agl > 45 && agl < 135,
+        Down: agl <= -45 && agl > -135,
         Left: agl >= 135 || agl <= -135,
         Right: agl >= -45 && agl <= 45
     };
@@ -179,4 +221,13 @@ function getDirectionFromAngle(agl) {
         if (directions[key]) return key;
     }
     return null;
+}
+
+/**
+ * 根据两条线段获取缩放倍数
+ * @param d0
+ * @param d1
+ */
+function getZoom(d0, d1) {
+    return d1 / d0;
 }

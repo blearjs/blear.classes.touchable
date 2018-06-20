@@ -17,7 +17,7 @@ var tch = new Touchable({
 });
 
 
-tch.on('touchStart', function (ev) {
+tch.on('touchEnd', function (ev) {
     console(ev);
 });
 
