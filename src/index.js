@@ -103,7 +103,8 @@ var Touchable = Draggable.extend({
                 var aStart = getAngle(p0Start, p1Start);
                 var aEnd = getAngle(p0End, p1End);
                 scale = getZoom(dStart, dEnd);
-                rotation = aEnd - aStart;
+                // 保证顺时针为正，逆时针为负
+                rotation = aStart - aEnd;
             }
 
             meta.scale = scale;
@@ -147,7 +148,8 @@ var Touchable = Draggable.extend({
                 var aStart = getAngle(p0Start, p1Start);
                 var aEnd = getAngle(p0End, p1End);
                 scale = getZoom(dStart, dEnd);
-                rotation = aEnd - aStart;
+                // 保证顺时针为正，逆时针为负
+                rotation = aStart - aEnd;
             }
 
             meta.start1X = the[_start1X];
